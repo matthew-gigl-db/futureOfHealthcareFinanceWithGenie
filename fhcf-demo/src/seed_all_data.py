@@ -11,7 +11,7 @@
 # MAGIC
 # MAGIC **Schema:** Parameterized via `catalog` and `schema` widgets (defaults: `hls_fde.healthcare_finance`)  
 # MAGIC **Tables:** dim_aco_contract, dim_budget, dim_member, dim_provider_network, gold_financial_monthly, gold_quality_measures, gold_utilization_monthly, fact_vbc_performance  
-# MAGIC **Metric Views:** mv_financial, mv_quality, mv_vbc_performance, mv_utilization, mv_budget_variance, mv_member_risk  
+# MAGIC **Metric Views:** mv_financial, mv_quality, mv_vbc_performance, mv_utilization, mv_budget_variance, mv_member_risk (all with daily materialization)  
 # MAGIC **Data:** Synthetic, deterministic, with planted narrative for 4 demo beats
 
 # COMMAND ----------
@@ -882,6 +882,35 @@ print(f"Using: {dbutils.widgets.get('catalog')}.{dbutils.widgets.get('schema')}"
 # MAGIC       decimal_places:
 # MAGIC         type: exact
 # MAGIC         places: 2
+# MAGIC
+# MAGIC materialization:
+# MAGIC   schedule: every 1 day
+# MAGIC   mode: relaxed
+# MAGIC   materialized_views:
+# MAGIC     - name: baseline
+# MAGIC       type: unaggregated
+# MAGIC     - name: by_lob_month
+# MAGIC       type: aggregated
+# MAGIC       dimensions:
+# MAGIC         - lob
+# MAGIC         - year_month
+# MAGIC       measures:
+# MAGIC         - paid_amount
+# MAGIC         - premium_amount
+# MAGIC         - member_months
+# MAGIC         - mlr
+# MAGIC         - paid_pmpm
+# MAGIC     - name: by_lob_state_month
+# MAGIC       type: aggregated
+# MAGIC       dimensions:
+# MAGIC         - lob
+# MAGIC         - state
+# MAGIC         - year_month
+# MAGIC       measures:
+# MAGIC         - paid_amount
+# MAGIC         - premium_amount
+# MAGIC         - mlr
+# MAGIC         - paid_pmpm
 # MAGIC $$;
 # MAGIC
 # MAGIC COMMENT ON VIEW `mv_financial`
@@ -1026,6 +1055,34 @@ print(f"Using: {dbutils.widgets.get('catalog')}.{dbutils.widgets.get('schema')}"
 # MAGIC       decimal_places:
 # MAGIC         type: exact
 # MAGIC         places: 2
+# MAGIC
+# MAGIC materialization:
+# MAGIC   schedule: every 1 day
+# MAGIC   mode: relaxed
+# MAGIC   materialized_views:
+# MAGIC     - name: baseline
+# MAGIC       type: unaggregated
+# MAGIC     - name: by_measure_lob_month
+# MAGIC       type: aggregated
+# MAGIC       dimensions:
+# MAGIC         - measure_name
+# MAGIC         - lob
+# MAGIC         - year_month
+# MAGIC       measures:
+# MAGIC         - current_rate
+# MAGIC         - eligible_count
+# MAGIC         - gap_count
+# MAGIC         - gap_closure_rate
+# MAGIC     - name: by_domain_lob_month
+# MAGIC       type: aggregated
+# MAGIC       dimensions:
+# MAGIC         - condition_domain
+# MAGIC         - lob
+# MAGIC         - year_month
+# MAGIC       measures:
+# MAGIC         - current_rate
+# MAGIC         - eligible_count
+# MAGIC         - gap_count
 # MAGIC $$;
 # MAGIC
 # MAGIC COMMENT ON VIEW `mv_quality`
@@ -1186,6 +1243,24 @@ print(f"Using: {dbutils.widgets.get('catalog')}.{dbutils.widgets.get('schema')}"
 # MAGIC       decimal_places:
 # MAGIC         type: exact
 # MAGIC         places: 2
+# MAGIC
+# MAGIC materialization:
+# MAGIC   schedule: every 1 day
+# MAGIC   mode: relaxed
+# MAGIC   materialized_views:
+# MAGIC     - name: baseline
+# MAGIC       type: unaggregated
+# MAGIC     - name: by_aco_measure_quarter
+# MAGIC       type: aggregated
+# MAGIC       dimensions:
+# MAGIC         - aco_name
+# MAGIC         - measure_name
+# MAGIC         - quarter
+# MAGIC       measures:
+# MAGIC         - actual_value
+# MAGIC         - target_value
+# MAGIC         - variance
+# MAGIC         - trend_vs_prior_quarter
 # MAGIC $$;
 # MAGIC
 # MAGIC COMMENT ON VIEW `mv_vbc_performance`
@@ -1345,6 +1420,36 @@ print(f"Using: {dbutils.widgets.get('catalog')}.{dbutils.widgets.get('schema')}"
 # MAGIC         type: exact
 # MAGIC         places: 0
 # MAGIC       abbreviation: compact
+# MAGIC
+# MAGIC materialization:
+# MAGIC   schedule: every 1 day
+# MAGIC   mode: relaxed
+# MAGIC   materialized_views:
+# MAGIC     - name: baseline
+# MAGIC       type: unaggregated
+# MAGIC     - name: by_lob_month
+# MAGIC       type: aggregated
+# MAGIC       dimensions:
+# MAGIC         - lob
+# MAGIC         - year_month
+# MAGIC       measures:
+# MAGIC         - ip_admits
+# MAGIC         - ed_visits
+# MAGIC         - member_months
+# MAGIC         - ip_per_1k
+# MAGIC         - ed_per_1k
+# MAGIC         - readmission_rate
+# MAGIC     - name: by_lob_state_month
+# MAGIC       type: aggregated
+# MAGIC       dimensions:
+# MAGIC         - lob
+# MAGIC         - state
+# MAGIC         - year_month
+# MAGIC       measures:
+# MAGIC         - ip_admits
+# MAGIC         - ed_visits
+# MAGIC         - ip_per_1k
+# MAGIC         - ed_per_1k
 # MAGIC $$;
 # MAGIC
 # MAGIC COMMENT ON VIEW `mv_utilization`
@@ -1507,6 +1612,27 @@ print(f"Using: {dbutils.widgets.get('catalog')}.{dbutils.widgets.get('schema')}"
 # MAGIC       decimal_places:
 # MAGIC         type: exact
 # MAGIC         places: 2
+# MAGIC
+# MAGIC materialization:
+# MAGIC   schedule: every 1 day
+# MAGIC   mode: relaxed
+# MAGIC   materialized_views:
+# MAGIC     - name: baseline
+# MAGIC       type: unaggregated
+# MAGIC     - name: by_lob_month
+# MAGIC       type: aggregated
+# MAGIC       dimensions:
+# MAGIC         - lob
+# MAGIC         - year_month
+# MAGIC       measures:
+# MAGIC         - actual_paid
+# MAGIC         - actual_premium
+# MAGIC         - actual_mlr
+# MAGIC         - target_mlr
+# MAGIC         - mlr_variance
+# MAGIC         - premium_variance
+# MAGIC         - paid_claims_variance
+# MAGIC         - budget_attainment
 # MAGIC $$;
 # MAGIC
 # MAGIC COMMENT ON VIEW `mv_budget_variance`
@@ -1644,6 +1770,34 @@ print(f"Using: {dbutils.widgets.get('catalog')}.{dbutils.widgets.get('schema')}"
 # MAGIC       decimal_places:
 # MAGIC         type: exact
 # MAGIC         places: 2
+# MAGIC
+# MAGIC materialization:
+# MAGIC   schedule: every 1 day
+# MAGIC   mode: relaxed
+# MAGIC   materialized_views:
+# MAGIC     - name: baseline
+# MAGIC       type: unaggregated
+# MAGIC     - name: by_lob_risk
+# MAGIC       type: aggregated
+# MAGIC       dimensions:
+# MAGIC         - lob
+# MAGIC         - risk_tier
+# MAGIC       measures:
+# MAGIC         - member_count
+# MAGIC         - avg_risk_score
+# MAGIC         - high_risk_count
+# MAGIC         - high_risk_pct
+# MAGIC     - name: by_lob_state_age
+# MAGIC       type: aggregated
+# MAGIC       dimensions:
+# MAGIC         - lob
+# MAGIC         - state
+# MAGIC         - age_band
+# MAGIC       measures:
+# MAGIC         - member_count
+# MAGIC         - avg_risk_score
+# MAGIC         - avg_open_gaps
+# MAGIC         - gap_rate
 # MAGIC $$;
 # MAGIC
 # MAGIC COMMENT ON VIEW `mv_member_risk`
